@@ -1519,6 +1519,29 @@
 <a href="#1519" id="1519">1519</a>
 <a href="#1520" id="1520">1520</a>
 <a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
+<a href="#1544" id="1544">1544</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -2623,7 +2646,7 @@
 		finalize_block(
 			<span class="self">self</span>.client.clone(),
 			<span class="kw-2">&amp;</span><span class="self">self</span>.authority_set,
-			<span class="prelude-val">Some</span>(<span class="self">self</span>.config.justification_period.into()),
+			<span class="prelude-val">Some</span>(<span class="self">self</span>.config.justification_generation_period),
 			hash,
 			number,
 			(round, commit).into(),
@@ -2836,6 +2859,38 @@
 		.or_else(|| <span class="prelude-val">Some</span>((target_header.hash(), <span class="kw-2">*</span>target_header.number()))))
 }
 
+<span class="doccomment">/// Whether we should process a justification for the given block.
+///
+/// This can be used to decide whether to import a justification (when
+/// importing a block), or whether to generate a justification from a
+/// commit (when validating). Justifications for blocks that change the
+/// authority set will always be processed, otherwise we&#39;ll only process
+/// justifications if the last one was `justification_period` blocks ago.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>should_process_justification&lt;BE, Block, Client&gt;(
+	client: <span class="kw-2">&amp;</span>Client,
+	justification_period: u32,
+	number: NumberFor&lt;Block&gt;,
+	enacts_change: bool,
+) -&gt; bool
+<span class="kw">where
+	</span>Block: BlockT,
+	BE: BackendT&lt;Block&gt;,
+	Client: ClientForGrandpa&lt;Block, BE&gt;,
+{
+	<span class="kw">if </span>enacts_change {
+		<span class="kw">return </span><span class="bool-val">true
+	</span>}
+
+	<span class="kw">let </span>last_finalized_number = client.info().finalized_number;
+
+	<span class="comment">// keep the first justification before reaching the justification period
+	</span><span class="kw">if </span>last_finalized_number.is_zero() {
+		<span class="kw">return </span><span class="bool-val">true
+	</span>}
+
+	last_finalized_number / justification_period.into() != number / justification_period.into()
+}
+
 <span class="doccomment">/// Finalize the given block and apply any authority set changes. If an
 /// authority set change is enacted then a justification is created (if not
 /// given) and stored with the block when finalizing it.
@@ -2843,7 +2898,7 @@
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>finalize_block&lt;BE, Block, Client&gt;(
 	client: Arc&lt;Client&gt;,
 	authority_set: <span class="kw-2">&amp;</span>SharedAuthoritySet&lt;Block::Hash, NumberFor&lt;Block&gt;&gt;,
-	justification_period: <span class="prelude-ty">Option</span>&lt;NumberFor&lt;Block&gt;&gt;,
+	justification_generation_period: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 	hash: Block::Hash,
 	number: NumberFor&lt;Block&gt;,
 	justification_or_commit: JustificationOrCommit&lt;Block&gt;,
@@ -2914,22 +2969,13 @@
 		</span><span class="kw">let </span>(justification_required, justification) = <span class="kw">match </span>justification_or_commit {
 			JustificationOrCommit::Justification(justification) =&gt; (<span class="bool-val">true</span>, justification),
 			JustificationOrCommit::Commit((round_number, commit)) =&gt; {
-				<span class="kw">let </span><span class="kw-2">mut </span>justification_required =
-					<span class="comment">// justification is always required when block that enacts new authorities
-					// set is finalized
-					</span>status.new_set_block.is_some();
+				<span class="kw">let </span>enacts_change = status.new_set_block.is_some();
 
-				<span class="comment">// justification is required every N blocks to be able to prove blocks
-				// finalization to remote nodes
-				</span><span class="kw">if </span>!justification_required {
-					<span class="kw">if let </span><span class="prelude-val">Some</span>(justification_period) = justification_period {
-						<span class="kw">let </span>last_finalized_number = client.info().finalized_number;
-						justification_required = (!last_finalized_number.is_zero() ||
-							number - last_finalized_number == justification_period) &amp;&amp;
-							(last_finalized_number / justification_period !=
-								number / justification_period);
-					}
-				}
+				<span class="kw">let </span>justification_required = justification_generation_period
+					.map(|period| {
+						should_process_justification(<span class="kw-2">&amp;*</span>client, period, number, enacts_change)
+					})
+					.unwrap_or(enacts_change);
 
 				<span class="kw">let </span>justification =
 					GrandpaJustification::from_commit(<span class="kw-2">&amp;</span>client, round_number, commit)<span class="question-mark">?</span>;

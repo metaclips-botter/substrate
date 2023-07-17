@@ -329,6 +329,11 @@
 <a href="#329" id="329">329</a>
 <a href="#330" id="330">330</a>
 <a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Service and ServiceFactory implementation. Specialized wrapper over substrate service.
 
 </span><span class="kw">use </span>futures::FutureExt;
@@ -367,6 +372,10 @@
 	sc_service::TFullClient&lt;Block, RuntimeApi, NativeElseWasmExecutor&lt;ExecutorDispatch&gt;&gt;;
 <span class="kw">type </span>FullBackend = sc_service::TFullBackend&lt;Block&gt;;
 <span class="kw">type </span>FullSelectChain = sc_consensus::LongestChain&lt;FullBackend, Block&gt;;
+
+<span class="doccomment">/// The minimum period of blocks on which justifications will be
+/// imported and generated.
+</span><span class="kw">const </span>GRANDPA_JUSTIFICATION_PERIOD: u32 = <span class="number">512</span>;
 
 <span class="attr">#[allow(clippy::type_complexity)]
 </span><span class="kw">pub fn </span>new_partial(
@@ -428,6 +437,7 @@
 
 	<span class="kw">let </span>(grandpa_block_import, grandpa_link) = sc_consensus_grandpa::block_import(
 		client.clone(),
+		GRANDPA_JUSTIFICATION_PERIOD,
 		<span class="kw-2">&amp;</span>client,
 		select_chain.clone(),
 		telemetry.as_ref().map(|x| x.handle()),
@@ -621,7 +631,7 @@
 		<span class="kw">let </span>grandpa_config = sc_consensus_grandpa::Config {
 			<span class="comment">// FIXME #1578 make this available through chainspec
 			</span>gossip_duration: Duration::from_millis(<span class="number">333</span>),
-			justification_period: <span class="number">512</span>,
+			justification_generation_period: GRANDPA_JUSTIFICATION_PERIOD,
 			name: <span class="prelude-val">Some</span>(name),
 			observer_enabled: <span class="bool-val">false</span>,
 			keystore,

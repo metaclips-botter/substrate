@@ -830,6 +830,23 @@
 <a href="#830" id="830">830</a>
 <a href="#831" id="831">831</a>
 <a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -873,7 +890,7 @@
 
 <span class="kw">use crate</span>::{
 	authorities::{AuthoritySet, DelayKind, PendingChange, SharedAuthoritySet},
-	environment::finalize_block,
+	environment,
 	justification::GrandpaJustification,
 	notification::GrandpaJustificationSender,
 	AuthoritySetChanges, ClientForGrandpa, CommandOrError, Error, NewAuthoritySet, VoterCommand,
@@ -891,6 +908,7 @@
 /// object.
 </span><span class="kw">pub struct </span>GrandpaBlockImport&lt;Backend, Block: BlockT, Client, SC&gt; {
 	inner: Arc&lt;Client&gt;,
+	justification_import_period: u32,
 	select_chain: SC,
 	authority_set: SharedAuthoritySet&lt;Block::Hash, NumberFor&lt;Block&gt;&gt;,
 	send_voter_commands: TracingUnboundedSender&lt;VoterCommand&lt;Block::Hash, NumberFor&lt;Block&gt;&gt;&gt;,
@@ -906,6 +924,7 @@
 	<span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
 		GrandpaBlockImport {
 			inner: <span class="self">self</span>.inner.clone(),
+			justification_import_period: <span class="self">self</span>.justification_import_period,
 			select_chain: <span class="self">self</span>.select_chain.clone(),
 			authority_set: <span class="self">self</span>.authority_set.clone(),
 			send_voter_commands: <span class="self">self</span>.send_voter_commands.clone(),
@@ -1480,26 +1499,39 @@
 
 		<span class="kw">match </span>grandpa_justification {
 			<span class="prelude-val">Some</span>(justification) =&gt; {
-				<span class="kw">let </span>import_res = <span class="self">self</span>.import_justification(
-					hash,
+				<span class="kw">if </span>environment::should_process_justification(
+					<span class="kw-2">&amp;*</span><span class="self">self</span>.inner,
+					<span class="self">self</span>.justification_import_period,
 					number,
-					(GRANDPA_ENGINE_ID, justification),
 					needs_justification,
-					initial_sync,
-				);
+				) {
+					<span class="kw">let </span>import_res = <span class="self">self</span>.import_justification(
+						hash,
+						number,
+						(GRANDPA_ENGINE_ID, justification),
+						needs_justification,
+						initial_sync,
+					);
 
-				import_res.unwrap_or_else(|err| {
-					<span class="kw">if </span>needs_justification {
-						<span class="macro">debug!</span>(
-							target: LOG_TARGET,
-							<span class="string">&quot;Requesting justification from peers due to imported block #{} that enacts authority set change with invalid justification: {}&quot;</span>,
-							number,
-							err
-						);
-						imported_aux.bad_justification = <span class="bool-val">true</span>;
-						imported_aux.needs_justification = <span class="bool-val">true</span>;
-					}
-				});
+					import_res.unwrap_or_else(|err| {
+						<span class="kw">if </span>needs_justification {
+							<span class="macro">debug!</span>(
+								target: LOG_TARGET,
+								<span class="string">&quot;Requesting justification from peers due to imported block #{} that enacts authority set change with invalid justification: {}&quot;</span>,
+								number,
+								err
+							);
+							imported_aux.bad_justification = <span class="bool-val">true</span>;
+							imported_aux.needs_justification = <span class="bool-val">true</span>;
+						}
+					});
+				} <span class="kw">else </span>{
+					<span class="macro">debug!</span>(
+						target: LOG_TARGET,
+						<span class="string">&quot;Ignoring unnecessary justification for block #{}&quot;</span>,
+						number,
+					);
+				}
 			},
 			<span class="prelude-val">None </span>=&gt;
 				<span class="kw">if </span>needs_justification {
@@ -1527,6 +1559,7 @@
 <span class="kw">impl</span>&lt;Backend, Block: BlockT, Client, SC&gt; GrandpaBlockImport&lt;Backend, Block, Client, SC&gt; {
 	<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(
 		inner: Arc&lt;Client&gt;,
+		justification_import_period: u32,
 		select_chain: SC,
 		authority_set: SharedAuthoritySet&lt;Block::Hash, NumberFor&lt;Block&gt;&gt;,
 		send_voter_commands: TracingUnboundedSender&lt;VoterCommand&lt;Block::Hash, NumberFor&lt;Block&gt;&gt;&gt;,
@@ -1565,6 +1598,7 @@
 
 		GrandpaBlockImport {
 			inner,
+			justification_import_period,
 			select_chain,
 			authority_set,
 			send_voter_commands,
@@ -1615,7 +1649,7 @@
 			<span class="prelude-val">Ok</span>(justification) =&gt; justification,
 		};
 
-		<span class="kw">let </span>result = finalize_block(
+		<span class="kw">let </span>result = environment::finalize_block(
 			<span class="self">self</span>.inner.clone(),
 			<span class="kw-2">&amp;</span><span class="self">self</span>.authority_set,
 			<span class="prelude-val">None</span>,
