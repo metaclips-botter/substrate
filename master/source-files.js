@@ -239,7 +239,7 @@ var sourcesIndex = JSON.parse('{\
 "sp_session":["",[],["lib.rs"]],\
 "sp_staking":["",[],["currency_to_vote.rs","lib.rs","offence.rs"]],\
 "sp_state_machine":["",[["overlayed_changes",[],["changeset.rs","mod.rs","offchain.rs"]]],["backend.rs","basic.rs","error.rs","ext.rs","in_memory_backend.rs","lib.rs","read_only.rs","stats.rs","testing.rs","trie_backend.rs","trie_backend_essence.rs"]],\
-"sp_statement_store":["",[],["lib.rs","runtime_api.rs","store_api.rs"]],\
+"sp_statement_store":["",[],["ecies.rs","lib.rs","runtime_api.rs","store_api.rs"]],\
 "sp_std":["",[],["lib.rs","with_std.rs"]],\
 "sp_storage":["",[],["lib.rs"]],\
 "sp_test_primitives":["",[],["lib.rs"]],\

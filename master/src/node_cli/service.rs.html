@@ -888,6 +888,7 @@
 <a href="#888" id="888">888</a>
 <a href="#889" id="889">889</a>
 <a href="#890" id="890">890</a>
+<a href="#891" id="891">891</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -1131,6 +1132,7 @@
 		<span class="kw-2">&amp;</span>config.data_path,
 		Default::default(),
 		client.clone(),
+		keystore_container.local_keystore(),
 		config.prometheus_registry(),
 		<span class="kw-2">&amp;</span>task_manager.spawn_handle(),
 	)

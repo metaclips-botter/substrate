@@ -608,8 +608,6 @@
 <a href="#608" id="608">608</a>
 <a href="#609" id="609">609</a>
 <a href="#610" id="610">610</a>
-<a href="#611" id="611">611</a>
-<a href="#612" id="612">612</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -951,9 +949,7 @@
 		<span class="kw">let </span><span class="kw-2">mut </span>events = Vec::new();
 
 		<span class="comment">// Nothing to be done if no finalized hashes are provided.
-		</span><span class="kw">let </span><span class="prelude-val">Some</span>(first_hash) = finalized_block_hashes.get(<span class="number">0</span>) <span class="kw">else </span>{
-			<span class="kw">return </span><span class="prelude-val">Ok</span>(Default::default())
-		};
+		</span><span class="kw">let </span><span class="prelude-val">Some</span>(first_hash) = finalized_block_hashes.get(<span class="number">0</span>) <span class="kw">else </span>{ <span class="kw">return </span><span class="prelude-val">Ok</span>(Default::default()) };
 
 		<span class="comment">// Find the parent header.
 		</span><span class="kw">let </span><span class="prelude-val">Some</span>(first_header) = <span class="self">self</span>.client.header(<span class="kw-2">*</span>first_hash)<span class="question-mark">? </span><span class="kw">else </span>{

@@ -806,8 +806,8 @@
 		<span class="comment">// Answer incoming RPC requests.
 		</span><span class="kw">let </span><span class="prelude-val">Some</span>(req) = rpc_rx.next().<span class="kw">await else </span>{
 			<span class="macro">debug!</span>(<span class="string">&quot;RPC requests stream has terminated, shutting down the system RPC future.&quot;</span>);
-			<span class="kw">return</span>;
-		};
+			<span class="kw">return
+		</span>};
 
 		<span class="kw">match </span>req {
 			sc_rpc::system::Request::Health(sender) =&gt; <span class="kw">match </span>sync_service.peers_info().<span class="kw">await </span>{

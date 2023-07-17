@@ -1744,7 +1744,7 @@
 		addresses: <span class="kw-2">&amp;</span>[Multiaddr],
 		effective_role: Endpoint,
 	) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;Multiaddr&gt;, ConnectionDenied&gt; {
-		<span class="kw">let </span><span class="prelude-val">Some</span>(peer_id) = maybe_peer <span class="kw">else </span>{ <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new()); };
+		<span class="kw">let </span><span class="prelude-val">Some</span>(peer_id) = maybe_peer <span class="kw">else </span>{ <span class="kw">return </span><span class="prelude-val">Ok</span>(Vec::new()) };
 
 		<span class="kw">let </span><span class="kw-2">mut </span>list = <span class="self">self
 			</span>.permanent_addresses

@@ -286,8 +286,6 @@
 <a href="#286" id="286">286</a>
 <a href="#287" id="287">287</a>
 <a href="#288" id="288">288</a>
-<a href="#289" id="289">289</a>
-<a href="#290" id="290">290</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -486,9 +484,7 @@
 		base_hash: Block::Hash,
 		import_lock: <span class="kw-2">&amp;</span>RwLock&lt;()&gt;,
 	) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Block::Hash&gt;&gt; {
-		<span class="kw">let </span><span class="prelude-val">Some</span>(base_header) = <span class="self">self</span>.header(base_hash)<span class="question-mark">? </span><span class="kw">else </span>{
-			<span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
-		};
+		<span class="kw">let </span><span class="prelude-val">Some</span>(base_header) = <span class="self">self</span>.header(base_hash)<span class="question-mark">? </span><span class="kw">else </span>{ <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) };
 
 		<span class="kw">let </span>leaves = {
 			<span class="comment">// ensure no blocks are imported during this code block.
