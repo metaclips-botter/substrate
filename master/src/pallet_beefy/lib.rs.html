@@ -443,6 +443,16 @@
 <a href="#443" id="443">443</a>
 <a href="#444" id="444">444</a>
 <a href="#445" id="445">445</a>
+<a href="#446" id="446">446</a>
+<a href="#447" id="447">447</a>
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -522,6 +532,10 @@
 		<span class="doccomment">/// The maximum number of authorities that can be added.
 		</span><span class="attr">#[pallet::constant]
 		</span><span class="kw">type </span>MaxAuthorities: Get&lt;u32&gt;;
+
+		<span class="doccomment">/// The maximum number of nominators for each validator.
+		</span><span class="attr">#[pallet::constant]
+		</span><span class="kw">type </span>MaxNominators: Get&lt;u32&gt;;
 
 		<span class="doccomment">/// The maximum number of entries to keep in the set id to session index mapping.
 		///
@@ -648,7 +662,10 @@
 		/// against the extracted offender. If both are valid, the offence
 		/// will be reported.
 		</span><span class="attr">#[pallet::call_index(<span class="number">0</span>)]
-		#[pallet::weight(T::WeightInfo::report_equivocation(key_owner_proof.validator_count()))]
+		#[pallet::weight(T::WeightInfo::report_equivocation(
+			key_owner_proof.validator_count(),
+			T::MaxNominators::get(),
+		))]
 		</span><span class="kw">pub fn </span>report_equivocation(
 			origin: OriginFor&lt;T&gt;,
 			equivocation_proof: Box&lt;
@@ -680,7 +697,10 @@
 		/// if the block author is defined it will be defined as the equivocation
 		/// reporter.
 		</span><span class="attr">#[pallet::call_index(<span class="number">1</span>)]
-		#[pallet::weight(T::WeightInfo::report_equivocation(key_owner_proof.validator_count()))]
+		#[pallet::weight(T::WeightInfo::report_equivocation(
+			key_owner_proof.validator_count(),
+			T::MaxNominators::get(),
+		))]
 		</span><span class="kw">pub fn </span>report_equivocation_unsigned(
 			origin: OriginFor&lt;T&gt;,
 			equivocation_proof: Box&lt;
@@ -886,6 +906,6 @@
 }
 
 <span class="kw">pub trait </span>WeightInfo {
-	<span class="kw">fn </span>report_equivocation(validator_count: u32) -&gt; Weight;
+	<span class="kw">fn </span>report_equivocation(validator_count: u32, max_nominators_per_validator: u32) -&gt; Weight;
 }
 </code></pre></div></section></main></body></html>

@@ -55,10 +55,6 @@
 <a href="#55" id="55">55</a>
 <a href="#56" id="56">56</a>
 <a href="#57" id="57">57</a>
-<a href="#58" id="58">58</a>
-<a href="#59" id="59">59</a>
-<a href="#60" id="60">60</a>
-<a href="#61" id="61">61</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -85,14 +81,10 @@
 };
 
 <span class="kw">impl </span><span class="kw">crate</span>::WeightInfo <span class="kw">for </span>() {
-	<span class="kw">fn </span>report_equivocation(validator_count: u32) -&gt; Weight {
+	<span class="kw">fn </span>report_equivocation(validator_count: u32, max_nominators_per_validator: u32) -&gt; Weight {
 		<span class="comment">// we take the validator set count from the membership proof to
 		// calculate the weight but we set a floor of 100 validators.
 		</span><span class="kw">let </span>validator_count = validator_count.max(<span class="number">100</span>) <span class="kw">as </span>u64;
-
-		<span class="comment">// worst case we are considering is that the given offender
-		// is backed by 200 nominators
-		</span><span class="kw">const </span>MAX_NOMINATORS: u64 = <span class="number">200</span>;
 
 		<span class="comment">// checking membership proof
 		</span>Weight::from_parts(<span class="number">35u64 </span>* WEIGHT_REF_TIME_PER_MICROS, <span class="number">0</span>)
@@ -106,11 +98,11 @@
 			<span class="comment">// report offence
 			</span>.saturating_add(Weight::from_parts(<span class="number">110u64 </span>* WEIGHT_REF_TIME_PER_MICROS, <span class="number">0</span>))
 			.saturating_add(Weight::from_parts(
-				<span class="number">25u64 </span>* WEIGHT_REF_TIME_PER_MICROS * MAX_NOMINATORS,
+				<span class="number">25u64 </span>* WEIGHT_REF_TIME_PER_MICROS * max_nominators_per_validator <span class="kw">as </span>u64,
 				<span class="number">0</span>,
 			))
-			.saturating_add(DbWeight::get().reads(<span class="number">14 </span>+ <span class="number">3 </span>* MAX_NOMINATORS))
-			.saturating_add(DbWeight::get().writes(<span class="number">10 </span>+ <span class="number">3 </span>* MAX_NOMINATORS))
+			.saturating_add(DbWeight::get().reads(<span class="number">14 </span>+ <span class="number">3 </span>* max_nominators_per_validator <span class="kw">as </span>u64))
+			.saturating_add(DbWeight::get().writes(<span class="number">10 </span>+ <span class="number">3 </span>* max_nominators_per_validator <span class="kw">as </span>u64))
 			<span class="comment">// fetching set id -&gt; session index mappings
 			</span>.saturating_add(DbWeight::get().reads(<span class="number">2</span>))
 	}
