@@ -274,6 +274,51 @@
 <a href="#274" id="274">274</a>
 <a href="#275" id="275">275</a>
 <a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -329,12 +374,14 @@
 
 <span class="attr">#[test]
 </span><span class="kw">fn </span>block_progression_works() {
-	ExtBuilder::default().build_and_execute(|| {
+	<span class="kw">let </span>(<span class="kw-2">mut </span>ext, pool_state, <span class="kw">_</span>) = ExtBuilder::default().build_offchainify();
+
+	ext.execute_with(|| {
 		<span class="macro">assert_eq!</span>(active_era(), <span class="number">0</span>);
 		<span class="macro">assert_eq!</span>(Session::current_index(), <span class="number">0</span>);
 		<span class="macro">assert!</span>(ElectionProviderMultiPhase::current_phase().is_off());
 
-		<span class="macro">assert!</span>(start_next_active_era().is_ok());
+		<span class="macro">assert!</span>(start_next_active_era(pool_state.clone()).is_ok());
 		<span class="macro">assert_eq!</span>(active_era(), <span class="number">1</span>);
 		<span class="macro">assert_eq!</span>(Session::current_index(), &lt;SessionsPerEra <span class="kw">as </span>Get&lt;u32&gt;&gt;::get());
 
@@ -344,18 +391,59 @@
 		<span class="macro">assert!</span>(ElectionProviderMultiPhase::current_phase().is_signed());
 	});
 
-	ExtBuilder::default().build_and_execute(|| {
+	<span class="kw">let </span>(<span class="kw-2">mut </span>ext, pool_state, <span class="kw">_</span>) = ExtBuilder::default().build_offchainify();
+
+	ext.execute_with(|| {
 		<span class="macro">assert_eq!</span>(active_era(), <span class="number">0</span>);
 		<span class="macro">assert_eq!</span>(Session::current_index(), <span class="number">0</span>);
 		<span class="macro">assert!</span>(ElectionProviderMultiPhase::current_phase().is_off());
 
-		<span class="macro">assert!</span>(start_next_active_era_delayed_solution().is_ok());
+		<span class="macro">assert!</span>(start_next_active_era_delayed_solution(pool_state).is_ok());
 		<span class="comment">// if the solution is delayed, EPM will end up in emergency mode..
 		</span><span class="macro">assert!</span>(ElectionProviderMultiPhase::current_phase().is_emergency());
 		<span class="comment">// .. era won&#39;t progress..
 		</span><span class="macro">assert_eq!</span>(active_era(), <span class="number">0</span>);
 		<span class="comment">// .. but session does.
 		</span><span class="macro">assert_eq!</span>(Session::current_index(), <span class="number">2</span>);
+	})
+}
+
+<span class="attr">#[test]
+</span><span class="kw">fn </span>offchainify_works() {
+	<span class="kw">use </span>pallet_election_provider_multi_phase::QueuedSolution;
+
+	<span class="kw">let </span>staking_builder = StakingExtBuilder::default();
+	<span class="kw">let </span>epm_builder = EpmExtBuilder::default();
+	<span class="kw">let </span>(<span class="kw-2">mut </span>ext, pool_state, <span class="kw">_</span>) = ExtBuilder::default()
+		.epm(epm_builder)
+		.staking(staking_builder)
+		.build_offchainify();
+
+	ext.execute_with(|| {
+		<span class="comment">// test ocw progression and solution queue if submission when unsigned phase submission is
+		// not delayed.
+		</span><span class="kw">for _ in </span><span class="number">0</span>..<span class="number">100 </span>{
+			roll_one(pool_state.clone(), <span class="bool-val">false</span>);
+			<span class="kw">let </span>current_phase = ElectionProviderMultiPhase::current_phase();
+
+			<span class="macro">assert!</span>(
+				<span class="kw">match </span>QueuedSolution::&lt;Runtime&gt;::get() {
+					<span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; current_phase.is_unsigned(),
+					<span class="prelude-val">None </span>=&gt; !current_phase.is_unsigned(),
+				},
+				<span class="string">&quot;solution must be queued *only* in unsigned phase&quot;
+			</span>);
+		}
+
+		<span class="comment">// test ocw solution queue if submission in unsigned phase is delayed.
+		</span><span class="kw">for _ in </span><span class="number">0</span>..<span class="number">100 </span>{
+			roll_one(pool_state.clone(), <span class="bool-val">true</span>);
+			<span class="macro">assert_eq!</span>(
+				QueuedSolution::&lt;Runtime&gt;::get(),
+				<span class="prelude-val">None</span>,
+				<span class="string">&quot;solution must never be submitted and stored since it is delayed&quot;
+			</span>);
+		}
 	})
 }
 
@@ -375,8 +463,9 @@
 /// restarts. Note that in this test case, the emergency throttling is disabled.
 </span><span class="kw">fn </span>enters_emergency_phase_after_forcing_before_elect() {
 	<span class="kw">let </span>epm_builder = EpmExtBuilder::default().disable_emergency_throttling();
+	<span class="kw">let </span>(<span class="kw-2">mut </span>ext, pool_state, <span class="kw">_</span>) = ExtBuilder::default().epm(epm_builder).build_offchainify();
 
-	ExtBuilder::default().epm(epm_builder).build_and_execute(|| {
+	ext.execute_with(|| {
 		<span class="macro">log!</span>(
 			trace,
 			<span class="string">&quot;current validators (staking): {:?}&quot;</span>,
@@ -393,15 +482,15 @@
 
 		<span class="macro">assert_eq!</span>(pallet_staking::ForceEra::&lt;Runtime&gt;::get(), pallet_staking::Forcing::ForceNew);
 
-		advance_session_delayed_solution();
+		advance_session_delayed_solution(pool_state.clone());
 		<span class="macro">assert!</span>(ElectionProviderMultiPhase::current_phase().is_emergency());
 		log_current_time();
 
 		<span class="kw">let </span>era_before_delayed_next = Staking::current_era();
 		<span class="comment">// try to advance 2 eras.
-		</span><span class="macro">assert!</span>(start_next_active_era_delayed_solution().is_ok());
+		</span><span class="macro">assert!</span>(start_next_active_era_delayed_solution(pool_state.clone()).is_ok());
 		<span class="macro">assert_eq!</span>(Staking::current_era(), era_before_delayed_next);
-		<span class="macro">assert!</span>(start_next_active_era().is_err());
+		<span class="macro">assert!</span>(start_next_active_era(pool_state).is_err());
 		<span class="macro">assert_eq!</span>(Staking::current_era(), era_before_delayed_next);
 
 		<span class="comment">// EPM is still in emergency phase.
@@ -445,41 +534,43 @@
 	<span class="kw">let </span>staking_builder = StakingExtBuilder::default().validator_count(<span class="number">10</span>);
 	<span class="kw">let </span>epm_builder = EpmExtBuilder::default().disable_emergency_throttling();
 
-	ExtBuilder::default()
-		.staking(staking_builder)
+	<span class="kw">let </span>(<span class="kw-2">mut </span>ext, pool_state, <span class="kw">_</span>) = ExtBuilder::default()
 		.epm(epm_builder)
-		.build_and_execute(|| {
-			<span class="macro">assert_eq!</span>(Session::validators().len(), <span class="number">10</span>);
-			<span class="kw">let </span><span class="kw-2">mut </span>active_validator_set = Session::validators();
+		.staking(staking_builder)
+		.build_offchainify();
 
-			roll_to_epm_signed();
+	ext.execute_with(|| {
+		<span class="macro">assert_eq!</span>(Session::validators().len(), <span class="number">10</span>);
+		<span class="kw">let </span><span class="kw-2">mut </span>active_validator_set = Session::validators();
 
-			<span class="comment">// set a minimum election score.
-			</span><span class="macro">assert!</span>(set_minimum_election_score(<span class="number">500</span>, <span class="number">1000</span>, <span class="number">500</span>).is_ok());
+		roll_to_epm_signed();
 
-			<span class="comment">// slash 10% of the active validators and progress era until the minimum trusted score
-			// is reached.
-			</span><span class="kw">while </span>active_validator_set.len() &gt; <span class="number">0 </span>{
-				<span class="kw">let </span>slashed = slash_percentage(Perbill::from_percent(<span class="number">10</span>));
-				<span class="macro">assert_eq!</span>(slashed.len(), <span class="number">1</span>);
+		<span class="comment">// set a minimum election score.
+		</span><span class="macro">assert!</span>(set_minimum_election_score(<span class="number">500</span>, <span class="number">1000</span>, <span class="number">500</span>).is_ok());
 
-				<span class="comment">// break loop when era does not progress; EPM is in emergency phase as election
-				// failed due to election minimum score.
-				</span><span class="kw">if </span>start_next_active_era().is_err() {
-					<span class="macro">assert!</span>(ElectionProviderMultiPhase::current_phase().is_emergency());
-					<span class="kw">break
-				</span>}
+		<span class="comment">// slash 10% of the active validators and progress era until the minimum trusted score
+		// is reached.
+		</span><span class="kw">while </span>active_validator_set.len() &gt; <span class="number">0 </span>{
+			<span class="kw">let </span>slashed = slash_percentage(Perbill::from_percent(<span class="number">10</span>));
+			<span class="macro">assert_eq!</span>(slashed.len(), <span class="number">1</span>);
 
-				active_validator_set = Session::validators();
+			<span class="comment">// break loop when era does not progress; EPM is in emergency phase as election
+			// failed due to election minimum score.
+			</span><span class="kw">if </span>start_next_active_era(pool_state.clone()).is_err() {
+				<span class="macro">assert!</span>(ElectionProviderMultiPhase::current_phase().is_emergency());
+				<span class="kw">break
+			</span>}
 
-				<span class="macro">log!</span>(
-					trace,
-					<span class="string">&quot;slashed 10% of active validators ({:?}). After slash: {:?}&quot;</span>,
-					slashed,
-					active_validator_set
-				);
-			}
-		});
+			active_validator_set = Session::validators();
+
+			<span class="macro">log!</span>(
+				trace,
+				<span class="string">&quot;slashed 10% of active validators ({:?}). After slash: {:?}&quot;</span>,
+				slashed,
+				active_validator_set
+			);
+		}
+	});
 }
 
 <span class="attr">#[test]
@@ -499,55 +590,54 @@
 	<span class="kw">use </span>frame_election_provider_support::SortedListProvider;
 	<span class="kw">use </span>pallet_staking::{Event, Forcing, Nominators};
 
-	<span class="kw">let </span>staking_builder = StakingExtBuilder::default();
-	<span class="kw">let </span>epm_builder = EpmExtBuilder::default();
+	<span class="kw">let </span>(<span class="kw-2">mut </span>ext, pool_state, <span class="kw">_</span>) = ExtBuilder::default()
+		.epm(EpmExtBuilder::default())
+		.staking(StakingExtBuilder::default())
+		.build_offchainify();
 
-	ExtBuilder::default()
-		.staking(staking_builder)
-		.epm(epm_builder)
-		.build_and_execute(|| {
-			<span class="macro">assert_eq!</span>(active_era(), <span class="number">0</span>);
-			<span class="comment">// validator is part of the validator set.
-			</span><span class="macro">assert!</span>(Session::validators().contains(<span class="kw-2">&amp;</span><span class="number">81</span>));
-			<span class="macro">assert!</span>(&lt;Runtime <span class="kw">as </span>pallet_staking::Config&gt;::VoterList::contains(<span class="kw-2">&amp;</span><span class="number">81</span>));
+	ext.execute_with(|| {
+		<span class="macro">assert_eq!</span>(active_era(), <span class="number">0</span>);
+		<span class="comment">// validator is part of the validator set.
+		</span><span class="macro">assert!</span>(Session::validators().contains(<span class="kw-2">&amp;</span><span class="number">41</span>));
+		<span class="macro">assert!</span>(&lt;Runtime <span class="kw">as </span>pallet_staking::Config&gt;::VoterList::contains(<span class="kw-2">&amp;</span><span class="number">41</span>));
 
-			<span class="comment">// nominate validator 81.
-			</span><span class="macro">assert_ok!</span>(Staking::nominate(RuntimeOrigin::signed(<span class="number">21</span>), <span class="macro">vec!</span>[<span class="number">81</span>]));
-			<span class="macro">assert_eq!</span>(Nominators::&lt;Runtime&gt;::get(<span class="number">21</span>).unwrap().targets, <span class="macro">vec!</span>[<span class="number">81</span>]);
+		<span class="comment">// nominate validator 81.
+		</span><span class="macro">assert_ok!</span>(Staking::nominate(RuntimeOrigin::signed(<span class="number">21</span>), <span class="macro">vec!</span>[<span class="number">41</span>]));
+		<span class="macro">assert_eq!</span>(Nominators::&lt;Runtime&gt;::get(<span class="number">21</span>).unwrap().targets, <span class="macro">vec!</span>[<span class="number">41</span>]);
 
-			<span class="comment">// validator is slashed. it is removed from the `VoterList` through chilling but in the
-			// current era, the validator is still part of the active validator set.
-			</span>add_slash(<span class="kw-2">&amp;</span><span class="number">81</span>);
-			<span class="macro">assert!</span>(Session::validators().contains(<span class="kw-2">&amp;</span><span class="number">81</span>));
-			<span class="macro">assert!</span>(!&lt;Runtime <span class="kw">as </span>pallet_staking::Config&gt;::VoterList::contains(<span class="kw-2">&amp;</span><span class="number">81</span>));
-			<span class="macro">assert_eq!</span>(
-				staking_events(),
-				[
-					Event::Chilled { stash: <span class="number">81 </span>},
-					Event::ForceEra { mode: Forcing::ForceNew },
-					Event::SlashReported {
-						validator: <span class="number">81</span>,
-						slash_era: <span class="number">0</span>,
-						fraction: Perbill::from_percent(<span class="number">10</span>)
-					}
-				],
-			);
+		<span class="comment">// validator is slashed. it is removed from the `VoterList` through chilling but in the
+		// current era, the validator is still part of the active validator set.
+		</span>add_slash(<span class="kw-2">&amp;</span><span class="number">41</span>);
+		<span class="macro">assert!</span>(Session::validators().contains(<span class="kw-2">&amp;</span><span class="number">41</span>));
+		<span class="macro">assert!</span>(!&lt;Runtime <span class="kw">as </span>pallet_staking::Config&gt;::VoterList::contains(<span class="kw-2">&amp;</span><span class="number">41</span>));
+		<span class="macro">assert_eq!</span>(
+			staking_events(),
+			[
+				Event::Chilled { stash: <span class="number">41 </span>},
+				Event::ForceEra { mode: Forcing::ForceNew },
+				Event::SlashReported {
+					validator: <span class="number">41</span>,
+					slash_era: <span class="number">0</span>,
+					fraction: Perbill::from_percent(<span class="number">10</span>)
+				}
+			],
+		);
 
-			<span class="comment">// after the nominator is slashed and chilled, the nominations remain.
-			</span><span class="macro">assert_eq!</span>(Nominators::&lt;Runtime&gt;::get(<span class="number">21</span>).unwrap().targets, <span class="macro">vec!</span>[<span class="number">81</span>]);
+		<span class="comment">// after the nominator is slashed and chilled, the nominations remain.
+		</span><span class="macro">assert_eq!</span>(Nominators::&lt;Runtime&gt;::get(<span class="number">21</span>).unwrap().targets, <span class="macro">vec!</span>[<span class="number">41</span>]);
 
-			<span class="comment">// validator sets intention to stake again in the same era it was chilled.
-			</span><span class="macro">assert_ok!</span>(Staking::validate(RuntimeOrigin::signed(<span class="number">81</span>), Default::default()));
+		<span class="comment">// validator sets intention to stake again in the same era it was chilled.
+		</span><span class="macro">assert_ok!</span>(Staking::validate(RuntimeOrigin::signed(<span class="number">41</span>), Default::default()));
 
-			<span class="comment">// progress era and check that the slashed validator is still part of the validator
-			// set.
-			</span><span class="macro">assert!</span>(start_next_active_era().is_ok());
-			<span class="macro">assert_eq!</span>(active_era(), <span class="number">1</span>);
-			<span class="macro">assert!</span>(Session::validators().contains(<span class="kw-2">&amp;</span><span class="number">81</span>));
-			<span class="macro">assert!</span>(&lt;Runtime <span class="kw">as </span>pallet_staking::Config&gt;::VoterList::contains(<span class="kw-2">&amp;</span><span class="number">81</span>));
+		<span class="comment">// progress era and check that the slashed validator is still part of the validator
+		// set.
+		</span><span class="macro">assert!</span>(start_next_active_era(pool_state).is_ok());
+		<span class="macro">assert_eq!</span>(active_era(), <span class="number">1</span>);
+		<span class="macro">assert!</span>(Session::validators().contains(<span class="kw-2">&amp;</span><span class="number">41</span>));
+		<span class="macro">assert!</span>(&lt;Runtime <span class="kw">as </span>pallet_staking::Config&gt;::VoterList::contains(<span class="kw-2">&amp;</span><span class="number">41</span>));
 
-			<span class="comment">// nominations are still active as before the slash.
-			</span><span class="macro">assert_eq!</span>(Nominators::&lt;Runtime&gt;::get(<span class="number">21</span>).unwrap().targets, <span class="macro">vec!</span>[<span class="number">81</span>]);
-		})
+		<span class="comment">// nominations are still active as before the slash.
+		</span><span class="macro">assert_eq!</span>(Nominators::&lt;Runtime&gt;::get(<span class="number">21</span>).unwrap().targets, <span class="macro">vec!</span>[<span class="number">41</span>]);
+	})
 }
 </code></pre></div></section></main></body></html>
