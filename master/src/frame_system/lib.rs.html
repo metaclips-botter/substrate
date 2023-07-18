@@ -1797,8 +1797,6 @@
 <a href="#1797" id="1797">1797</a>
 <a href="#1798" id="1798">1798</a>
 <a href="#1799" id="1799">1799</a>
-<a href="#1800" id="1800">1800</a>
-<a href="#1801" id="1801">1801</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -2191,9 +2189,7 @@
 	</span><span class="kw">impl</span>&lt;T: Config&gt; Hooks&lt;BlockNumberFor&lt;T&gt;&gt; <span class="kw">for </span>Pallet&lt;T&gt; {
 		<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 		</span><span class="kw">fn </span>integrity_test() {
-			sp_io::TestExternalities::default().execute_with(|| {
-				T::BlockWeights::get().validate().expect(<span class="string">&quot;The weights are invalid.&quot;</span>);
-			});
+			T::BlockWeights::get().validate().expect(<span class="string">&quot;The weights are invalid.&quot;</span>);
 		}
 	}
 

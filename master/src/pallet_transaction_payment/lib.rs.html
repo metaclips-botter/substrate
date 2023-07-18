@@ -875,9 +875,6 @@
 <a href="#875" id="875">875</a>
 <a href="#876" id="876">876</a>
 <a href="#877" id="877">877</a>
-<a href="#878" id="878">878</a>
-<a href="#879" id="879">879</a>
-<a href="#880" id="880">880</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -1296,7 +1293,8 @@
 			});
 		}
 
-		<span class="kw">fn </span>integrity_test() {
+		<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+		</span><span class="kw">fn </span>integrity_test() {
 			<span class="comment">// given weight == u64, we build multipliers from `diff` of two weight values, which can
 			// at most be maximum block weight. Make sure that this can fit in a multiplier without
 			// loss.
@@ -1321,25 +1319,21 @@
 				</span><span class="kw">return
 			</span>}
 
-			<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, test))]
-			</span>sp_io::TestExternalities::new_empty().execute_with(|| {
-				<span class="comment">// This is the minimum value of the multiplier. Make sure that if we collapse to
-				// this value, we can recover with a reasonable amount of traffic. For this test we
-				// assert that if we collapse to minimum, the trend will be positive with a weight
-				// value which is 1% more than the target.
-				</span><span class="kw">let </span>min_value = T::FeeMultiplierUpdate::min();
+			<span class="comment">// This is the minimum value of the multiplier. Make sure that if we collapse to this
+			// value, we can recover with a reasonable amount of traffic. For this test we assert
+			// that if we collapse to minimum, the trend will be positive with a weight value which
+			// is 1% more than the target.
+			</span><span class="kw">let </span>min_value = T::FeeMultiplierUpdate::min();
+			<span class="kw">let </span>target = target + addition;
 
-				<span class="kw">let </span>target = target + addition;
-
-				&lt;frame_system::Pallet&lt;T&gt;&gt;::set_block_consumed_resources(target, <span class="number">0</span>);
-				<span class="kw">let </span>next = T::FeeMultiplierUpdate::convert(min_value);
-				<span class="macro">assert!</span>(
-					next &gt; min_value,
-					<span class="string">&quot;The minimum bound of the multiplier is too low. When \
-					block saturation is more than target by 1% and multiplier is minimal then \
-					the multiplier doesn&#39;t increase.&quot;
-				</span>);
-			});
+			&lt;frame_system::Pallet&lt;T&gt;&gt;::set_block_consumed_resources(target, <span class="number">0</span>);
+			<span class="kw">let </span>next = T::FeeMultiplierUpdate::convert(min_value);
+			<span class="macro">assert!</span>(
+				next &gt; min_value,
+				<span class="string">&quot;The minimum bound of the multiplier is too low. When \
+				block saturation is more than target by 1% and multiplier is minimal then \
+				the multiplier doesn&#39;t increase.&quot;
+			</span>);
 		}
 	}
 }

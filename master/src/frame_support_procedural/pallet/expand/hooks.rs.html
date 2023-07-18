@@ -279,6 +279,8 @@
 <a href="#279" id="279">279</a>
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -532,11 +534,13 @@
 			<span class="kw">for </span>#pallet_ident&lt;#type_use_gen&gt; #where_clause
 			{
 				<span class="kw">fn </span>integrity_test() {
-					&lt;
-						<span class="self">Self </span><span class="kw">as </span>#frame_support::traits::Hooks&lt;
-						#frame_system::pallet_prelude::BlockNumberFor::&lt;T&gt;
-						&gt;
+					#frame_support::sp_io::TestExternalities::default().execute_with(|| {
+						&lt;
+							<span class="self">Self </span><span class="kw">as </span>#frame_support::traits::Hooks&lt;
+								#frame_system::pallet_prelude::BlockNumberFor::&lt;T&gt;
+							&gt;
 						&gt;::integrity_test()
+					});
 				}
 			}
 		}
