@@ -4398,6 +4398,13 @@
 <a href="#4398" id="4398">4398</a>
 <a href="#4399" id="4399">4399</a>
 <a href="#4400" id="4400">4400</a>
+<a href="#4401" id="4401">4401</a>
+<a href="#4402" id="4402">4402</a>
+<a href="#4403" id="4403">4403</a>
+<a href="#4404" id="4404">4404</a>
+<a href="#4405" id="4405">4405</a>
+<a href="#4406" id="4406">4406</a>
+<a href="#4407" id="4407">4407</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -5522,6 +5529,13 @@
 			};
 
 		<span class="self">Self</span>::from_database(db <span class="kw">as </span>Arc&lt;<span class="kw">_</span>&gt;, canonicalization_delay, <span class="kw-2">&amp;</span>db_config, needs_init)
+	}
+
+	<span class="doccomment">/// Reset the shared trie cache.
+	</span><span class="kw">pub fn </span>reset_trie_cache(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+		<span class="kw">if let </span><span class="prelude-val">Some</span>(cache) = <span class="kw-2">&amp;</span><span class="self">self</span>.shared_trie_cache {
+			cache.reset();
+		}
 	}
 
 	<span class="doccomment">/// Create new memory-backed client backend for tests.
