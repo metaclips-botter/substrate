@@ -539,7 +539,7 @@
 
 		<span class="kw">fn </span>on_idle(<span class="kw">_</span>: BlockNumberFor&lt;T&gt;, remaining_weight: Weight) -&gt; Weight {
 			<span class="kw">let </span><span class="kw-2">mut </span>meter = WeightMeter::from_limit(remaining_weight);
-			<span class="kw">if </span>!meter.check_accrue(T::WeightInfo::empty_on_idle()) {
+			<span class="kw">if </span>meter.try_consume(T::WeightInfo::empty_on_idle()).is_err() {
 				<span class="kw">return </span>T::WeightInfo::empty_on_idle()
 			}
 
@@ -555,7 +555,7 @@
 			<span class="self">Self</span>::waste_at_most_proof_size(<span class="kw-2">&amp;mut </span>meter);
 			<span class="self">Self</span>::waste_at_most_ref_time(<span class="kw-2">&amp;mut </span>meter);
 
-			meter.consumed
+			meter.consumed()
 		}
 	}
 
@@ -637,7 +637,7 @@
 		</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>waste_at_most_proof_size(meter: <span class="kw-2">&amp;mut </span>WeightMeter) {
 			<span class="kw">let </span><span class="prelude-val">Ok</span>(n) = <span class="self">Self</span>::calculate_proof_size_iters(<span class="kw-2">&amp;</span>meter) <span class="kw">else </span>{ <span class="kw">return </span>};
 
-			meter.defensive_saturating_accrue(T::WeightInfo::waste_proof_size_some(n));
+			meter.consume(T::WeightInfo::waste_proof_size_some(n));
 
 			(<span class="number">0</span>..n).for_each(|i| {
 				TrashData::&lt;T&gt;::get(i);
@@ -666,7 +666,7 @@
 		/// Tries to come as close to the limit as possible.
 		</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>waste_at_most_ref_time(meter: <span class="kw-2">&amp;mut </span>WeightMeter) {
 			<span class="kw">let </span><span class="prelude-val">Ok</span>(n) = <span class="self">Self</span>::calculate_ref_time_iters(<span class="kw-2">&amp;</span>meter) <span class="kw">else </span>{ <span class="kw">return </span>};
-			meter.defensive_saturating_accrue(T::WeightInfo::waste_ref_time_iter(n));
+			meter.consume(T::WeightInfo::waste_ref_time_iter(n));
 
 			<span class="kw">let </span>clobber = <span class="self">Self</span>::waste_ref_time_iter(<span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="number">64</span>], n);
 

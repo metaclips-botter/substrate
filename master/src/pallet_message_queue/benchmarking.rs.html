@@ -448,7 +448,7 @@
 		}
 
 		<span class="macro">assert_eq!</span>(ServiceHead::&lt;T&gt;::get().unwrap(), <span class="number">10u32</span>.into());
-		<span class="macro">assert_eq!</span>(weight.consumed, T::WeightInfo::bump_service_head());
+		<span class="macro">assert_eq!</span>(weight.consumed(), T::WeightInfo::bump_service_head());
 	}
 
 	<span class="attr">#[benchmark]

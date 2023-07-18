@@ -1320,6 +1320,7 @@
 <a href="#1320" id="1320">1320</a>
 <a href="#1321" id="1321">1321</a>
 <a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -1618,7 +1619,7 @@
 		</span><span class="kw">fn </span>on_initialize(now: BlockNumberFor&lt;T&gt;) -&gt; Weight {
 			<span class="kw">let </span><span class="kw-2">mut </span>weight_counter = WeightMeter::from_limit(T::MaximumWeight::get());
 			<span class="self">Self</span>::service_agendas(<span class="kw-2">&amp;mut </span>weight_counter, now, u32::max_value());
-			weight_counter.consumed
+			weight_counter.consumed()
 		}
 	}
 
@@ -2281,7 +2282,7 @@
 <span class="kw">impl</span>&lt;T: Config&gt; Pallet&lt;T&gt; {
 	<span class="doccomment">/// Service up to `max` agendas queue starting from earliest incompletely executed agenda.
 	</span><span class="kw">fn </span>service_agendas(weight: <span class="kw-2">&amp;mut </span>WeightMeter, now: BlockNumberFor&lt;T&gt;, max: u32) {
-		<span class="kw">if </span>!weight.check_accrue(T::WeightInfo::service_agendas_base()) {
+		<span class="kw">if </span>weight.try_consume(T::WeightInfo::service_agendas_base()).is_err() {
 			<span class="kw">return
 		</span>}
 
@@ -2292,7 +2293,7 @@
 		<span class="kw">let </span>max_items = T::MaxScheduledPerBlock::get();
 		<span class="kw">let </span><span class="kw-2">mut </span>count_down = max;
 		<span class="kw">let </span>service_agenda_base_weight = T::WeightInfo::service_agenda_base(max_items);
-		<span class="kw">while </span>count_down &gt; <span class="number">0 </span>&amp;&amp; when &lt;= now &amp;&amp; weight.can_accrue(service_agenda_base_weight) {
+		<span class="kw">while </span>count_down &gt; <span class="number">0 </span>&amp;&amp; when &lt;= now &amp;&amp; weight.can_consume(service_agenda_base_weight) {
 			<span class="kw">if </span>!<span class="self">Self</span>::service_agenda(weight, <span class="kw-2">&amp;mut </span>executed, now, when, u32::max_value()) {
 				incomplete_since = incomplete_since.min(when);
 			}
@@ -2323,8 +2324,9 @@
 			})
 			.collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 		ordered.sort_by_key(|k| k.<span class="number">1</span>);
-		<span class="kw">let </span>within_limit =
-			weight.check_accrue(T::WeightInfo::service_agenda_base(ordered.len() <span class="kw">as </span>u32));
+		<span class="kw">let </span>within_limit = weight
+			.try_consume(T::WeightInfo::service_agenda_base(ordered.len() <span class="kw">as </span>u32))
+			.is_ok();
 		<span class="macro">debug_assert!</span>(within_limit, <span class="string">&quot;weight limit should have been checked in advance&quot;</span>);
 
 		<span class="comment">// Items which we know can be executed and have postponed for execution in a later block.
@@ -2342,7 +2344,7 @@
 				task.maybe_id.is_some(),
 				task.maybe_periodic.is_some(),
 			);
-			<span class="kw">if </span>!weight.can_accrue(base_weight) {
+			<span class="kw">if </span>!weight.can_consume(base_weight) {
 				postponed += <span class="number">1</span>;
 				<span class="kw">break
 			</span>}
@@ -2394,7 +2396,7 @@
 			<span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>((Unavailable, <span class="prelude-val">Some</span>(task))),
 		};
 
-		weight.check_accrue(T::WeightInfo::service_task(
+		<span class="kw">let _ </span>= weight.try_consume(T::WeightInfo::service_task(
 			lookup_len.map(|x| x <span class="kw">as </span>usize),
 			task.maybe_id.is_some(),
 			task.maybe_periodic.is_some(),
@@ -2470,7 +2472,7 @@
 		<span class="comment">// We only allow a scheduled call if it cannot push the weight past the limit.
 		</span><span class="kw">let </span>max_weight = base_weight.saturating_add(call_weight);
 
-		<span class="kw">if </span>!weight.can_accrue(max_weight) {
+		<span class="kw">if </span>!weight.can_consume(max_weight) {
 			<span class="kw">return </span><span class="prelude-val">Err</span>(Overweight)
 		}
 
@@ -2481,8 +2483,8 @@
 				(error_and_info.post_info.actual_weight, <span class="prelude-val">Err</span>(error_and_info.error)),
 		};
 		<span class="kw">let </span>call_weight = maybe_actual_call_weight.unwrap_or(call_weight);
-		weight.check_accrue(base_weight);
-		weight.check_accrue(call_weight);
+		<span class="kw">let _ </span>= weight.try_consume(base_weight);
+		<span class="kw">let _ </span>= weight.try_consume(call_weight);
 		<span class="prelude-val">Ok</span>(result)
 	}
 }

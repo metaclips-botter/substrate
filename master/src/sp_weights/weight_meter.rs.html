@@ -180,6 +180,111 @@
 <a href="#180" id="180">180</a>
 <a href="#181" id="181">181</a>
 <a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
+<a href="#256" id="256">256</a>
+<a href="#257" id="257">257</a>
+<a href="#258" id="258">258</a>
+<a href="#259" id="259">259</a>
+<a href="#260" id="260">260</a>
+<a href="#261" id="261">261</a>
+<a href="#262" id="262">262</a>
+<a href="#263" id="263">263</a>
+<a href="#264" id="264">264</a>
+<a href="#265" id="265">265</a>
+<a href="#266" id="266">266</a>
+<a href="#267" id="267">267</a>
+<a href="#268" id="268">268</a>
+<a href="#269" id="269">269</a>
+<a href="#270" id="270">270</a>
+<a href="#271" id="271">271</a>
+<a href="#272" id="272">272</a>
+<a href="#273" id="273">273</a>
+<a href="#274" id="274">274</a>
+<a href="#275" id="275">275</a>
+<a href="#276" id="276">276</a>
+<a href="#277" id="277">277</a>
+<a href="#278" id="278">278</a>
+<a href="#279" id="279">279</a>
+<a href="#280" id="280">280</a>
+<a href="#281" id="281">281</a>
+<a href="#282" id="282">282</a>
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -214,18 +319,21 @@
 ///
 /// // The weight is limited to (10, 0).
 /// let mut meter = WeightMeter::from_limit(Weight::from_parts(10, 0));
-/// // There is enough weight remaining for an operation with (5, 0) weight.
-/// assert!(meter.check_accrue(Weight::from_parts(5, 0)));
-/// // There is not enough weight remaining for an operation with (6, 0) weight.
-/// assert!(!meter.check_accrue(Weight::from_parts(6, 0)));
+/// // There is enough weight remaining for an operation with (6, 0) weight.
+/// assert!(meter.try_consume(Weight::from_parts(6, 0)).is_ok());
+/// assert_eq!(meter.remaining(), Weight::from_parts(4, 0));
+/// // There is not enough weight remaining for an operation with (5, 0) weight.
+/// assert!(!meter.try_consume(Weight::from_parts(5, 0)).is_ok());
+/// // The total limit is obviously unchanged:
+/// assert_eq!(meter.limit(), Weight::from_parts(10, 0));
 /// ```
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>WeightMeter {
 	<span class="doccomment">/// The already consumed weight.
-	</span><span class="kw">pub </span>consumed: Weight,
+	</span>consumed: Weight,
 
 	<span class="doccomment">/// The maximal consumable weight.
-	</span><span class="kw">pub </span>limit: Weight,
+	</span>limit: Weight,
 }
 
 <span class="kw">impl </span>WeightMeter {
@@ -239,6 +347,16 @@
 		<span class="self">Self</span>::from_limit(Weight::MAX)
 	}
 
+	<span class="doccomment">/// The already consumed weight.
+	</span><span class="kw">pub fn </span>consumed(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Weight {
+		<span class="self">self</span>.consumed
+	}
+
+	<span class="doccomment">/// The limit can ever be accrued.
+	</span><span class="kw">pub fn </span>limit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Weight {
+		<span class="self">self</span>.limit
+	}
+
 	<span class="doccomment">/// The remaining weight that can still be consumed.
 	</span><span class="kw">pub fn </span>remaining(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Weight {
 		<span class="self">self</span>.limit.saturating_sub(<span class="self">self</span>.consumed)
@@ -247,6 +365,28 @@
 	<span class="doccomment">/// The ratio of consumed weight to the limit.
 	///
 	/// Calculates one ratio per component and returns the largest.
+	///
+	/// # Example
+	/// ```rust
+	/// use sp_weights::{Weight, WeightMeter};
+	/// use sp_arithmetic::Perbill;
+	///
+	/// let mut meter = WeightMeter::from_limit(Weight::from_parts(10, 20));
+	/// // Nothing consumed so far:
+	/// assert_eq!(meter.consumed_ratio(), Perbill::from_percent(0));
+	/// meter.consume(Weight::from_parts(5, 5));
+	/// // The ref-time is the larger ratio:
+	/// assert_eq!(meter.consumed_ratio(), Perbill::from_percent(50));
+	/// meter.consume(Weight::from_parts(1, 10));
+	/// // Now the larger ratio is proof-size:
+	/// assert_eq!(meter.consumed_ratio(), Perbill::from_percent(75));
+	/// // Eventually it reaches 100%:
+	/// meter.consume(Weight::from_parts(4, 0));
+	/// assert_eq!(meter.consumed_ratio(), Perbill::from_percent(100));
+	/// // Saturating the second component won&#39;t change anything anymore:
+	/// meter.consume(Weight::from_parts(0, 5));
+	/// assert_eq!(meter.consumed_ratio(), Perbill::from_percent(100));
+	/// ```
 	</span><span class="kw">pub fn </span>consumed_ratio(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Perbill {
 		<span class="kw">let </span>time = Perbill::from_rational(<span class="self">self</span>.consumed.ref_time(), <span class="self">self</span>.limit.ref_time());
 		<span class="kw">let </span>pov = Perbill::from_rational(<span class="self">self</span>.consumed.proof_size(), <span class="self">self</span>.limit.proof_size());
@@ -254,25 +394,46 @@
 	}
 
 	<span class="doccomment">/// Consume some weight and defensively fail if it is over the limit. Saturate in any case.
+	</span><span class="attr">#[deprecated(note = <span class="string">&quot;Use `consume` instead. Will be removed after December 2023.&quot;</span>)]
 	</span><span class="kw">pub fn </span>defensive_saturating_accrue(<span class="kw-2">&amp;mut </span><span class="self">self</span>, w: Weight) {
+		<span class="self">self</span>.consume(w);
+	}
+
+	<span class="doccomment">/// Consume some weight and defensively fail if it is over the limit. Saturate in any case.
+	</span><span class="kw">pub fn </span>consume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, w: Weight) {
 		<span class="self">self</span>.consumed.saturating_accrue(w);
 		<span class="macro">debug_assert!</span>(<span class="self">self</span>.consumed.all_lte(<span class="self">self</span>.limit), <span class="string">&quot;Weight counter overflow&quot;</span>);
 	}
 
-	<span class="doccomment">/// Consume the given weight after checking that it can be consumed. Otherwise do nothing.
+	<span class="doccomment">/// Consume the given weight after checking that it can be consumed and return `true`. Otherwise
+	/// do nothing and return `false`.
+	</span><span class="attr">#[deprecated(note = <span class="string">&quot;Use `try_consume` instead. Will be removed after December 2023.&quot;</span>)]
 	</span><span class="kw">pub fn </span>check_accrue(<span class="kw-2">&amp;mut </span><span class="self">self</span>, w: Weight) -&gt; bool {
-		<span class="self">self</span>.consumed.checked_add(<span class="kw-2">&amp;</span>w).map_or(<span class="bool-val">false</span>, |test| {
+		<span class="self">self</span>.try_consume(w).is_ok()
+	}
+
+	<span class="doccomment">/// Consume the given weight after checking that it can be consumed.
+	///
+	/// Returns `Ok` if the weight can be consumed or otherwise an `Err`.
+	</span><span class="kw">pub fn </span>try_consume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, w: Weight) -&gt; <span class="prelude-ty">Result</span>&lt;(), ()&gt; {
+		<span class="self">self</span>.consumed.checked_add(<span class="kw-2">&amp;</span>w).map_or(<span class="prelude-val">Err</span>(()), |test| {
 			<span class="kw">if </span>test.any_gt(<span class="self">self</span>.limit) {
-				<span class="bool-val">false
-			</span>} <span class="kw">else </span>{
+				<span class="prelude-val">Err</span>(())
+			} <span class="kw">else </span>{
 				<span class="self">self</span>.consumed = test;
-				<span class="bool-val">true
-			</span>}
+				<span class="prelude-val">Ok</span>(())
+			}
 		})
 	}
 
 	<span class="doccomment">/// Check if the given weight can be consumed.
+	</span><span class="attr">#[deprecated(note = <span class="string">&quot;Use `can_consume` instead. Will be removed after December 2023.&quot;</span>)]
 	</span><span class="kw">pub fn </span>can_accrue(<span class="kw-2">&amp;</span><span class="self">self</span>, w: Weight) -&gt; bool {
+		<span class="self">self</span>.can_consume(w)
+	}
+
+	<span class="doccomment">/// Check if the given weight can be consumed.
+	</span><span class="kw">pub fn </span>can_consume(<span class="kw-2">&amp;</span><span class="self">self</span>, w: Weight) -&gt; bool {
 		<span class="self">self</span>.consumed.checked_add(<span class="kw-2">&amp;</span>w).map_or(<span class="bool-val">false</span>, |t| t.all_lte(<span class="self">self</span>.limit))
 	}
 }
@@ -280,6 +441,7 @@
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
 	<span class="kw">use crate</span>::<span class="kw-2">*</span>;
+	<span class="kw">use </span>sp_arithmetic::traits::Zero;
 
 	<span class="attr">#[test]
 	</span><span class="kw">fn </span>weight_meter_remaining_works() {
@@ -360,6 +522,54 @@
 		<span class="macro">assert_eq!</span>(meter.consumed_ratio(), Perbill::from_percent(<span class="number">100</span>));
 		<span class="macro">assert!</span>(meter.check_accrue(Weight::from_parts(<span class="number">0</span>, <span class="number">4</span>)));
 		<span class="macro">assert_eq!</span>(meter.consumed_ratio(), Perbill::from_percent(<span class="number">100</span>));
+	}
+
+	<span class="attr">#[test]
+	</span><span class="kw">fn </span>try_consume_works() {
+		<span class="kw">let </span><span class="kw-2">mut </span>meter = WeightMeter::from_limit(Weight::from_parts(<span class="number">10</span>, <span class="number">0</span>));
+
+		<span class="macro">assert!</span>(meter.try_consume(Weight::from_parts(<span class="number">11</span>, <span class="number">0</span>)).is_err());
+		<span class="macro">assert!</span>(meter.consumed().is_zero(), <span class="string">&quot;No modification&quot;</span>);
+
+		<span class="macro">assert!</span>(meter.try_consume(Weight::from_parts(<span class="number">9</span>, <span class="number">0</span>)).is_ok());
+		<span class="macro">assert!</span>(meter.try_consume(Weight::from_parts(<span class="number">2</span>, <span class="number">0</span>)).is_err());
+		<span class="macro">assert!</span>(meter.try_consume(Weight::from_parts(<span class="number">1</span>, <span class="number">0</span>)).is_ok());
+		<span class="macro">assert!</span>(meter.remaining().is_zero());
+		<span class="macro">assert_eq!</span>(meter.consumed(), Weight::from_parts(<span class="number">10</span>, <span class="number">0</span>));
+	}
+
+	<span class="attr">#[test]
+	</span><span class="kw">fn </span>can_consume_works() {
+		<span class="kw">let </span><span class="kw-2">mut </span>meter = WeightMeter::from_limit(Weight::from_parts(<span class="number">10</span>, <span class="number">0</span>));
+
+		<span class="macro">assert!</span>(!meter.can_consume(Weight::from_parts(<span class="number">11</span>, <span class="number">0</span>)));
+		<span class="macro">assert!</span>(meter.consumed().is_zero(), <span class="string">&quot;No modification&quot;</span>);
+
+		<span class="macro">assert!</span>(meter.can_consume(Weight::from_parts(<span class="number">9</span>, <span class="number">0</span>)));
+		meter.consume(Weight::from_parts(<span class="number">9</span>, <span class="number">0</span>));
+		<span class="macro">assert!</span>(!meter.can_consume(Weight::from_parts(<span class="number">2</span>, <span class="number">0</span>)));
+		<span class="macro">assert!</span>(meter.can_consume(Weight::from_parts(<span class="number">1</span>, <span class="number">0</span>)));
+	}
+
+	<span class="attr">#[test]
+	#[cfg(debug_assertions)]
+	</span><span class="kw">fn </span>consume_works() {
+		<span class="kw">let </span><span class="kw-2">mut </span>meter = WeightMeter::from_limit(Weight::from_parts(<span class="number">5</span>, <span class="number">10</span>));
+
+		meter.consume(Weight::from_parts(<span class="number">4</span>, <span class="number">0</span>));
+		<span class="macro">assert_eq!</span>(meter.remaining(), Weight::from_parts(<span class="number">1</span>, <span class="number">10</span>));
+		meter.consume(Weight::from_parts(<span class="number">1</span>, <span class="number">0</span>));
+		<span class="macro">assert_eq!</span>(meter.remaining(), Weight::from_parts(<span class="number">0</span>, <span class="number">10</span>));
+		meter.consume(Weight::from_parts(<span class="number">0</span>, <span class="number">10</span>));
+		<span class="macro">assert_eq!</span>(meter.consumed(), Weight::from_parts(<span class="number">5</span>, <span class="number">10</span>));
+	}
+
+	<span class="attr">#[test]
+	#[cfg(debug_assertions)]
+	#[should_panic(expected = <span class="string">&quot;Weight counter overflow&quot;</span>)]
+	</span><span class="kw">fn </span>consume_defensive_fail() {
+		<span class="kw">let </span><span class="kw-2">mut </span>meter = WeightMeter::from_limit(Weight::from_parts(<span class="number">10</span>, <span class="number">0</span>));
+		<span class="kw">let _ </span>= meter.consume(Weight::from_parts(<span class="number">11</span>, <span class="number">0</span>));
 	}
 }
 </code></pre></div></section></main></body></html>

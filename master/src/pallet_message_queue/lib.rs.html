@@ -1352,6 +1352,16 @@
 <a href="#1352" id="1352">1352</a>
 <a href="#1353" id="1353">1353</a>
 <a href="#1354" id="1354">1354</a>
+<a href="#1355" id="1355">1355</a>
+<a href="#1356" id="1356">1356</a>
+<a href="#1357" id="1357">1357</a>
+<a href="#1358" id="1358">1358</a>
+<a href="#1359" id="1359">1359</a>
+<a href="#1360" id="1360">1360</a>
+<a href="#1361" id="1361">1361</a>
+<a href="#1362" id="1362">1362</a>
+<a href="#1363" id="1363">1363</a>
+<a href="#1364" id="1364">1364</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -2091,7 +2101,7 @@
 	///
 	/// Returns the current head if it got be bumped and `None` otherwise.
 	</span><span class="kw">fn </span>bump_service_head(weight: <span class="kw-2">&amp;mut </span>WeightMeter) -&gt; <span class="prelude-ty">Option</span>&lt;MessageOriginOf&lt;T&gt;&gt; {
-		<span class="kw">if </span>!weight.check_accrue(T::WeightInfo::bump_service_head()) {
+		<span class="kw">if </span>weight.try_consume(T::WeightInfo::bump_service_head()).is_err() {
 			<span class="kw">return </span><span class="prelude-val">None
 		</span>}
 
@@ -2219,7 +2229,7 @@
 					book_state.message_count,
 					book_state.size,
 				);
-				<span class="prelude-val">Ok</span>(weight_counter.consumed.saturating_add(page_weight))
+				<span class="prelude-val">Ok</span>(weight_counter.consumed().saturating_add(page_weight))
 			},
 		}
 	}
@@ -2302,9 +2312,13 @@
 		overweight_limit: Weight,
 	) -&gt; (bool, <span class="prelude-ty">Option</span>&lt;MessageOriginOf&lt;T&gt;&gt;) {
 		<span class="kw">use </span>PageExecutionStatus::<span class="kw-2">*</span>;
-		<span class="kw">if </span>!weight.check_accrue(
-			T::WeightInfo::service_queue_base().saturating_add(T::WeightInfo::ready_ring_unknit()),
-		) {
+		<span class="kw">if </span>weight
+			.try_consume(
+				T::WeightInfo::service_queue_base()
+					.saturating_add(T::WeightInfo::ready_ring_unknit()),
+			)
+			.is_err()
+		{
 			<span class="kw">return </span>(<span class="bool-val">false</span>, <span class="prelude-val">None</span>)
 		}
 
@@ -2357,10 +2371,13 @@
 		overweight_limit: Weight,
 	) -&gt; (u32, PageExecutionStatus) {
 		<span class="kw">use </span>PageExecutionStatus::<span class="kw-2">*</span>;
-		<span class="kw">if </span>!weight.check_accrue(
-			T::WeightInfo::service_page_base_completion()
-				.max(T::WeightInfo::service_page_base_no_completion()),
-		) {
+		<span class="kw">if </span>weight
+			.try_consume(
+				T::WeightInfo::service_page_base_completion()
+					.max(T::WeightInfo::service_page_base_no_completion()),
+			)
+			.is_err()
+		{
 			<span class="kw">return </span>(<span class="number">0</span>, Bailed)
 		}
 
@@ -2420,7 +2437,7 @@
 		</span><span class="kw">if </span>page.is_complete() {
 			<span class="kw">return </span>ItemExecutionStatus::NoItem
 		}
-		<span class="kw">if </span>!weight.check_accrue(T::WeightInfo::service_page_item()) {
+		<span class="kw">if </span>weight.try_consume(T::WeightInfo::service_page_item()).is_err() {
 			<span class="kw">return </span>ItemExecutionStatus::Bailed
 		}
 
@@ -2517,7 +2534,7 @@
 	) -&gt; MessageExecutionStatus {
 		<span class="kw">let </span>hash = sp_io::hashing::blake2_256(message);
 		<span class="kw">use </span>ProcessMessageError::<span class="kw-2">*</span>;
-		<span class="kw">let </span>prev_consumed = meter.consumed;
+		<span class="kw">let </span>prev_consumed = meter.consumed();
 		<span class="kw">let </span><span class="kw-2">mut </span>id = hash;
 
 		<span class="kw">match </span>T::MessageProcessor::process_message(message, origin.clone(), meter, <span class="kw-2">&amp;mut </span>id) {
@@ -2547,7 +2564,7 @@
 			},
 			<span class="prelude-val">Ok</span>(success) =&gt; {
 				<span class="comment">// Success
-				</span><span class="kw">let </span>weight_used = meter.consumed.saturating_sub(prev_consumed);
+				</span><span class="kw">let </span>weight_used = meter.consumed().saturating_sub(prev_consumed);
 				<span class="self">Self</span>::deposit_event(Event::&lt;T&gt;::Processed { id, origin, weight_used, success });
 				MessageExecutionStatus::Processed
 			},
@@ -2608,7 +2625,7 @@
 
 		<span class="kw">let </span><span class="kw-2">mut </span>next = <span class="kw">match </span><span class="self">Self</span>::bump_service_head(<span class="kw-2">&amp;mut </span>weight) {
 			<span class="prelude-val">Some</span>(h) =&gt; h,
-			<span class="prelude-val">None </span>=&gt; <span class="kw">return </span>weight.consumed,
+			<span class="prelude-val">None </span>=&gt; <span class="kw">return </span>weight.consumed(),
 		};
 		<span class="comment">// The last queue that did not make any progress.
 		// The loop aborts as soon as it arrives at this queue again without making any progress
@@ -2634,7 +2651,7 @@
 				<span class="prelude-val">None </span>=&gt; <span class="kw">break</span>,
 			}
 		}
-		weight.consumed
+		weight.consumed()
 	}
 
 	<span class="doccomment">/// Execute a single overweight message.
@@ -2645,10 +2662,13 @@
 		(message_origin, page, index): <span class="self">Self</span>::OverweightMessageAddress,
 	) -&gt; <span class="prelude-ty">Result</span>&lt;Weight, ExecuteOverweightError&gt; {
 		<span class="kw">let </span><span class="kw-2">mut </span>weight = WeightMeter::from_limit(weight_limit);
-		<span class="kw">if </span>!weight.check_accrue(
-			T::WeightInfo::execute_overweight_page_removed()
-				.max(T::WeightInfo::execute_overweight_page_updated()),
-		) {
+		<span class="kw">if </span>weight
+			.try_consume(
+				T::WeightInfo::execute_overweight_page_removed()
+					.max(T::WeightInfo::execute_overweight_page_updated()),
+			)
+			.is_err()
+		{
 			<span class="kw">return </span><span class="prelude-val">Err</span>(ExecuteOverweightError::InsufficientWeight)
 		}
 

@@ -259,7 +259,7 @@
 	) -&gt; <span class="prelude-ty">Result</span>&lt;bool, ProcessMessageError&gt; {
 		<span class="kw">let </span>required = Weight::from_parts(REQUIRED_WEIGHT, REQUIRED_WEIGHT);
 
-		<span class="kw">if </span>meter.check_accrue(required) {
+		<span class="kw">if </span>meter.try_consume(required).is_ok() {
 			<span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
 		} <span class="kw">else </span>{
 			<span class="prelude-val">Err</span>(ProcessMessageError::Overweight(required))
