@@ -321,6 +321,37 @@ impl<B: BlockT> Protocol<B> {
 		// from `NetworkWorker`.
 		self.peerset_handle.add_known_peer(peer_id);
 	}
+
+	/// Extract `/block-announces/1` handshake from the received handshake.
+	fn decode_handshake(
+		peer_id: PeerId,
+		received_handshake: Vec<u8>,
+	) -> Result<BlockAnnouncesHandshake<B>, ()> {
+		match <Message<B> as DecodeAll>::decode_all(&mut &received_handshake[..]) {
+			Ok(GenericMessage::Status(handshake)) => Ok(BlockAnnouncesHandshake::<B> {
+				roles: handshake.roles,
+				best_number: handshake.best_number,
+				best_hash: handshake.best_hash,
+				genesis_hash: handshake.genesis_hash,
+			}),
+			Ok(msg) => {
+				debug!(
+					target: "sync",
+					"Expected Status message from {peer_id}, but got {msg:?}",
+				);
+				Err(())
+			},
+			Err(err) =>
+				<BlockAnnouncesHandshake<B> as DecodeAll>::decode_all(&mut &received_handshake[..])
+					.map_err(|err2| {
+						log::debug!(
+							target: "sync",
+							"Couldn't decode handshake sent by {peer_id}: {received_handshake:?}: {err} & {err2}",
+						);
+						()
+					}),
+		}
+	}
 }
 
 /// Outcome of an incoming custom message.
@@ -445,6 +476,23 @@ impl<B: BlockT> NetworkBehaviour for Protocol<B> {
 		};
 
 		let outcome = match event {
+			NotificationsOut::ValidateSubstream { peer_id, handshake, tx } => {
+				match Self::decode_handshake(peer_id, handshake) {
+					Ok(handshake) => {
+						let _ = self.tx.unbounded_send(crate::SyncEvent::ValidateSubstream {
+							peer_id,
+							handshake,
+							tx,
+						});
+					},
+					Err(_) => {
+						log::debug!(target: "sub-libp2p", "failed to decode remote's handshake");
+						self.peerset_handle.report_peer(peer_id, rep::BAD_MESSAGE);
+					},
+				}
+
+				CustomMessageOutcome::None
+			},
 			NotificationsOut::CustomProtocolOpen {
 				peer_id,
 				set_id,

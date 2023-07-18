@@ -18,15 +18,18 @@
 
 use crate::{
 	peerset::DropReason,
-	protocol::notifications::handler::{
-		self, NotificationsSink, NotifsHandler, NotifsHandlerIn, NotifsHandlerOut,
+	protocol::{
+		notifications::handler::{
+			self, NotificationsSink, NotifsHandler, NotifsHandlerIn, NotifsHandlerOut,
+		},
+		HARDCODED_PEERSETS_SYNC,
 	},
 	types::ProtocolName,
 };
 
 use bytes::BytesMut;
 use fnv::FnvHashMap;
-use futures::{channel::oneshot, prelude::*};
+use futures::{channel::oneshot, future::BoxFuture, prelude::*, stream::FuturesUnordered};
 use libp2p::{
 	core::{ConnectedPoint, Endpoint, Multiaddr},
 	swarm::{
@@ -42,7 +45,7 @@ use rand::distributions::{Distribution as _, Uniform};
 use smallvec::SmallVec;
 use std::{
 	cmp,
-	collections::{hash_map::Entry, VecDeque},
+	collections::{hash_map::Entry, HashMap, VecDeque},
 	mem,
 	pin::Pin,
 	sync::Arc,
@@ -135,6 +138,15 @@ pub struct Notifications {
 
 	/// Events to produce from `poll()`.
 	events: VecDeque<ToSwarm<NotificationsOut, NotifsHandlerIn>>,
+
+	/// Syncing protocol substream indices.
+	sync_to_validate:
+		HashMap<crate::peerset::IncomingIndex, (PeerId, crate::peerset::IncomingIndex, Vec<u8>)>,
+
+	/// Pending substream validations for the syncing protocol.
+	pending_validations: FuturesUnordered<
+		BoxFuture<'static, Result<crate::peerset::IncomingIndex, crate::peerset::IncomingIndex>>,
+	>,
 }
 
 /// Configuration for a notifications protocol.
@@ -305,6 +317,20 @@ struct IncomingPeer {
 /// Event that can be emitted by the `Notifications`.
 #[derive(Debug)]
 pub enum NotificationsOut {
+	/// Send substream for validation to the protocol before accepting the connection.
+	// NOTE: Only used for the syncing protocol and will be removed once `NotificationService` is
+	// ready
+	ValidateSubstream {
+		/// Peer ID.
+		peer_id: PeerId,
+
+		/// Received handshake.
+		handshake: Vec<u8>,
+
+		/// TX channel for sending the validation result.
+		tx: oneshot::Sender<bool>,
+	},
+
 	/// Opened a custom protocol with the remote.
 	CustomProtocolOpen {
 		/// Id of the peer we are connected to.
@@ -383,6 +409,8 @@ impl Notifications {
 			incoming: SmallVec::new(),
 			next_incoming_index: crate::peerset::IncomingIndex(0),
 			events: VecDeque::new(),
+			sync_to_validate: HashMap::new(),
+			pending_validations: FuturesUnordered::new(),
 		}
 	}
 
@@ -993,6 +1021,34 @@ impl Notifications {
 				peer),
 		}
 	}
+
+	fn send_to_sync_for_validation(
+		&mut self,
+		peer_id: PeerId,
+		incoming_id: crate::peerset::IncomingIndex,
+		handshake: Vec<u8>,
+	) {
+		let (tx, rx) = oneshot::channel();
+
+		self.pending_validations.push(Box::pin(async move {
+			match rx.await {
+				Ok(accepted) =>
+					if accepted {
+						return Ok(incoming_id)
+					} else {
+						return Err(incoming_id)
+					},
+				Err(_) => return Err(incoming_id),
+			}
+		}));
+
+		self.events
+			.push_back(ToSwarm::GenerateEvent(NotificationsOut::ValidateSubstream {
+				peer_id,
+				handshake,
+				tx,
+			}));
+	}
 }
 
 impl NetworkBehaviour for Notifications {
@@ -1482,7 +1538,7 @@ impl NetworkBehaviour for Notifications {
 		event: THandlerOutEvent<Self>,
 	) {
 		match event {
-			NotifsHandlerOut::OpenDesiredByRemote { protocol_index } => {
+			NotifsHandlerOut::OpenDesiredByRemote { protocol_index, handshake } => {
 				let set_id = crate::peerset::SetId::from(protocol_index);
 
 				trace!(target: "sub-libp2p",
@@ -1596,6 +1652,8 @@ impl NetworkBehaviour for Notifications {
 									alive: true,
 									incoming_id,
 								});
+								self.sync_to_validate
+									.insert(incoming_id, (peer_id, incoming_id, handshake));
 
 								*entry.into_mut() = PeerState::Incoming {
 									connections,
@@ -2014,7 +2072,11 @@ impl NetworkBehaviour for Notifications {
 		loop {
 			match futures::Stream::poll_next(Pin::new(&mut self.peerset), cx) {
 				Poll::Ready(Some(crate::peerset::Message::Accept(index))) => {
-					self.peerset_report_accept(index);
+					match self.sync_to_validate.remove(&index) {
+						Some((peer, incoming_id, handshake)) =>
+							self.send_to_sync_for_validation(peer, incoming_id, handshake),
+						None => self.peerset_report_accept(index),
+					}
 				},
 				Poll::Ready(Some(crate::peerset::Message::Reject(index))) => {
 					self.peerset_report_reject(index);
@@ -2030,6 +2092,16 @@ impl NetworkBehaviour for Notifications {
 					break
 				},
 				Poll::Pending => break,
+			}
+		}
+
+		while let Poll::Ready(Some(result)) = self.pending_validations.poll_next_unpin(cx) {
+			match result {
+				Ok(index) => self.peerset_report_accept(index),
+				Err(index) => {
+					log::trace!(target: "sub-libp2p", "peer rejected by the syncing protocol");
+					self.peerset_report_reject(index);
+				},
 			}
 		}
 

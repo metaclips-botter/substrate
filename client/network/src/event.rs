@@ -96,6 +96,18 @@ pub enum Event {
 /// Event sent to `SyncingEngine`
 // TODO: remove once `NotificationService` is implemented.
 pub enum SyncEvent<B: BlockT> {
+	/// Send substream for validation to the protocol before accepting the connection.
+	ValidateSubstream {
+		/// Peer ID.
+		peer_id: PeerId,
+
+		/// Received handshake.
+		handshake: BlockAnnouncesHandshake<B>,
+
+		/// TX channel for sending the validation result.
+		tx: oneshot::Sender<bool>,
+	},
+
 	/// Opened a substream with the given node with the given notifications protocol.
 	///
 	/// The protocol is always one of the notification protocols that have been registered.
