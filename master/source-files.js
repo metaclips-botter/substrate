@@ -102,6 +102,7 @@ var sourcesIndex = JSON.parse('{\
 "pallet_nomination_pools_test_staking":["",[],["lib.rs"]],\
 "pallet_offences":["",[],["lib.rs","migration.rs"]],\
 "pallet_offences_benchmarking":["",[],["lib.rs"]],\
+"pallet_paged_list":["",[],["lib.rs","mock.rs","paged_list.rs"]],\
 "pallet_preimage":["",[],["benchmarking.rs","lib.rs","migration.rs","weights.rs"]],\
 "pallet_proxy":["",[],["benchmarking.rs","lib.rs","weights.rs"]],\
 "pallet_ranked_collective":["",[],["benchmarking.rs","lib.rs","weights.rs"]],\
