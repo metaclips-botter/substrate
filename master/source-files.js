@@ -3,7 +3,7 @@ var sourcesIndex = JSON.parse('{\
 "biguint":["",[],["biguint.rs"]],\
 "binary_merkle_tree":["",[],["lib.rs"]],\
 "call":["",[],["call.rs"]],\
-"chain_spec_builder":["",[],["main.rs"]],\
+"chain_spec_builder":["",[],["lib.rs"]],\
 "compact":["",[],["compact.rs"]],\
 "fixed_point":["",[],["fixed_point.rs"]],\
 "fork_tree":["",[],["lib.rs"]],\
@@ -253,12 +253,13 @@ var sourcesIndex = JSON.parse('{\
 "sp_wasm_interface":["",[],["lib.rs"]],\
 "sp_weights":["",[],["lib.rs","weight_meter.rs","weight_v2.rs"]],\
 "subkey":["",[],["lib.rs"]],\
-"substrate":["",[],["main.rs"]],\
+"substrate":["",[],["lib.rs"]],\
 "substrate_build_script_utils":["",[],["git.rs","lib.rs","version.rs"]],\
 "substrate_cli_test_utils":["",[],["lib.rs"]],\
 "substrate_frame_cli":["",[],["lib.rs","pallet_id.rs"]],\
 "substrate_frame_rpc_support":["",[],["lib.rs"]],\
 "substrate_frame_rpc_system":["",[],["lib.rs"]],\
+"substrate_node":["",[],["main.rs"]],\
 "substrate_prometheus_endpoint":["",[],["lib.rs","sourced.rs"]],\
 "substrate_rpc_client":["",[],["lib.rs"]],\
 "substrate_state_trie_migration_rpc":["",[],["lib.rs"]],\

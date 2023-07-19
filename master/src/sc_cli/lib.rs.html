@@ -249,6 +249,8 @@
 <a href="#249" id="249">249</a>
 <a href="#250" id="250">250</a>
 <a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -268,6 +270,8 @@
 // along with this program. If not, see &lt;https://www.gnu.org/licenses/&gt;.
 
 </span><span class="doccomment">//! Substrate CLI library.
+//!
+//! To see a full list of commands available, see [`commands`].
 
 </span><span class="attr">#![warn(missing_docs)]
 #![warn(unused_extern_crates)]
@@ -277,7 +281,7 @@
 <span class="kw">use </span>sc_service::Configuration;
 
 <span class="kw">pub mod </span>arg_enums;
-<span class="kw">mod </span>commands;
+<span class="kw">pub mod </span>commands;
 <span class="kw">mod </span>config;
 <span class="kw">mod </span>error;
 <span class="kw">mod </span>params;
