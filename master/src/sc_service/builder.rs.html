@@ -996,6 +996,8 @@
 <a href="#996" id="996">996</a>
 <a href="#997" id="997">997</a>
 <a href="#998" id="998">998</a>
+<a href="#999" id="999">999</a>
+<a href="#1000" id="1000">1000</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -1783,12 +1785,14 @@
 	};
 
 	<span class="kw">let </span>(state_request_protocol_config, state_request_protocol_name) = {
+		<span class="kw">let </span>num_peer_hint = net_config.network_config.default_peers_set_num_full <span class="kw">as </span>usize +
+			net_config.network_config.default_peers_set.reserved_nodes.len();
 		<span class="comment">// Allow both outgoing and incoming requests.
 		</span><span class="kw">let </span>(handler, protocol_config) = StateRequestHandler::new(
 			<span class="kw-2">&amp;</span>protocol_id,
 			config.chain_spec.fork_id(),
 			client.clone(),
-			net_config.network_config.default_peers_set_num_full <span class="kw">as </span>usize,
+			num_peer_hint,
 		);
 		<span class="kw">let </span>config_name = protocol_config.name.clone();
 

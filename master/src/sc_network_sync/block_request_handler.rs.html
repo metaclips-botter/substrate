@@ -464,6 +464,7 @@
 <a href="#464" id="464">464</a>
 <a href="#465" id="465">465</a>
 <a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright Parity Technologies (UK) Ltd.
 // This file is part of Substrate.
 
@@ -619,7 +620,8 @@
 	) -&gt; (<span class="self">Self</span>, ProtocolConfig) {
 		<span class="comment">// Reserve enough request slots for one request per peer when we are at the maximum
 		// number of peers.
-		</span><span class="kw">let </span>(tx, request_receiver) = async_channel::bounded(num_peer_hint);
+		</span><span class="kw">let </span>capacity = std::cmp::max(num_peer_hint, <span class="number">1</span>);
+		<span class="kw">let </span>(tx, request_receiver) = async_channel::bounded(capacity);
 
 		<span class="kw">let </span><span class="kw-2">mut </span>protocol_config = generate_protocol_config(
 			protocol_id,
