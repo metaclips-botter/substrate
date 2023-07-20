@@ -1481,6 +1481,18 @@
 <a href="#1481" id="1481">1481</a>
 <a href="#1482" id="1482">1482</a>
 <a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a>
+<a href="#1488" id="1488">1488</a>
+<a href="#1489" id="1489">1489</a>
+<a href="#1490" id="1490">1490</a>
+<a href="#1491" id="1491">1491</a>
+<a href="#1492" id="1492">1492</a>
+<a href="#1493" id="1493">1493</a>
+<a href="#1494" id="1494">1494</a>
+<a href="#1495" id="1495">1495</a>
 </pre></div><pre class="rust"><code><span class="comment">// This file is part of Substrate.
 
 // Copyright (C) Parity Technologies (UK) Ltd.
@@ -1856,6 +1868,8 @@
 		pending_response: oneshot::Sender&lt;<span class="prelude-ty">Result</span>&lt;Vec&lt;u8&gt;, RequestFailure&gt;&gt;,
 		connect: IfDisconnected,
 	) {
+		<span class="macro">log::trace!</span>(target: <span class="string">&quot;sub-libp2p&quot;</span>, <span class="string">&quot;send request to {target} ({protocol_name:?}), {} bytes&quot;</span>, request.len());
+
 		<span class="kw">if let </span><span class="prelude-val">Some</span>((protocol, <span class="kw">_</span>)) = <span class="self">self</span>.protocols.get_mut(protocol_name) {
 			<span class="kw">if </span>protocol.is_connected(target) || connect.should_connect() {
 				<span class="kw">let </span>request_id = protocol.send_request(target, request);
@@ -2099,6 +2113,8 @@
 							<span class="kw">continue </span><span class="lifetime">&#39;poll_all
 						</span>}
 
+						<span class="macro">log::trace!</span>(target: <span class="string">&quot;sub-libp2p&quot;</span>, <span class="string">&quot;request received from {peer} ({protocol:?}), {} bytes&quot;</span>, request.len());
+
 						<span class="kw">let </span>(tx, rx) = oneshot::channel();
 
 						<span class="comment">// Submit the request to the &quot;response builder&quot; passed by the user at
@@ -2158,6 +2174,8 @@
 
 				<span class="kw">if let </span><span class="prelude-val">Ok</span>(payload) = result {
 					<span class="kw">if let </span><span class="prelude-val">Some</span>((protocol, <span class="kw">_</span>)) = <span class="self">self</span>.protocols.get_mut(<span class="kw-2">&amp;*</span>protocol_name) {
+						<span class="macro">log::trace!</span>(target: <span class="string">&quot;sub-libp2p&quot;</span>, <span class="string">&quot;send response to {peer} ({protocol_name:?}), {} bytes&quot;</span>, payload.len());
+
 						<span class="kw">if </span>protocol.send_response(inner_channel, <span class="prelude-val">Ok</span>(payload)).is_err() {
 							<span class="comment">// Note: Failure is handled further below when receiving
 							// `InboundFailure` event from request-response [`Behaviour`].
@@ -2253,6 +2271,12 @@
 								.remove(<span class="kw-2">&amp;</span>(protocol.clone(), request_id).into())
 							{
 								<span class="prelude-val">Some</span>((started, pending_response)) =&gt; {
+									<span class="macro">log::trace!</span>(
+										target: <span class="string">&quot;sub-libp2p&quot;</span>,
+										<span class="string">&quot;received response from {peer} ({protocol:?}), {} bytes&quot;</span>,
+										response.as_ref().map_or(<span class="number">0usize</span>, |response| response.len()),
+									);
+
 									<span class="kw">let </span>delivered = pending_response
 										.send(response.map_err(|()| RequestFailure::Refused))
 										.map_err(|<span class="kw">_</span>| RequestFailure::Obsolete);
