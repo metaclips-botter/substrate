@@ -352,8 +352,9 @@ where
 					if let Ok(m) =
 						<Transactions<B::Extrinsic> as Decode>::decode(&mut message.as_ref())
 					{
-						println!("{:?}", m);
-						println!("{:?}", m.encode());
+						println!();
+						println!("Extrinsic as TX {m:?} {:?}", m.encode());
+						println!();
 						self.on_transactions(remote, m);
 					} else {
 						warn!(target: "sub-libp2p", "Failed to decode transactions list");
@@ -458,7 +459,9 @@ where
 				}
 				trace!(target: "sync", "Sending {} transactions to {}", to_send.len(), who);
 				let encoded = to_send.encode();
-				println!("{:?} {:?} {encoded:?}", to_send, self.protocol_name);
+				println!();
+				println!("Write TX {:?} {:?} {encoded:?}", to_send, self.protocol_name);
+				println!();
 				self.service
 					.write_notification(*who, self.protocol_name.clone(), to_send.encode());
 			}
